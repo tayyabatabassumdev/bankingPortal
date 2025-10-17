@@ -62,7 +62,7 @@ const Statistics = () => {
       <div className="flex items-end justify-around h-40 mt-2"> 
         {barChartData.map((data, i) => {
           const barHeight = (data.value / maxBarValue) * chartMaxHeightPx;
-          const barColorClass = data.isGreen ? 'bg-[#4b6043]' : 'bg-gray-200';
+          const barColorClass = data.isGreen ? 'bg-[#556E53]' : 'bg-gray-200';
 
           return (
             // Adjusted bar width from w-5 to w-4
