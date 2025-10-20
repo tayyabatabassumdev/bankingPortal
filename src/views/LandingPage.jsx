@@ -3,10 +3,10 @@ const LandingPage = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
       <h1 className="text-5xl font-extrabold text-[#4b6043] mb-4">
-        Simple Bank App
+       AuraBank App
       </h1>
       <p className="text-xl text-gray-700 mb-10 text-center max-w-lg">
-        Your client-side banking experience, powered by React and Local Storage.
+        Illuminating Your Path to Prosperity, One Smart Decision at a Time.
       </p>
       <div className="flex space-x-4">
         <Link
