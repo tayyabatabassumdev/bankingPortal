@@ -1,12 +1,9 @@
-// src/components/NavItem.jsx
-
 const NavItem = ({ label, icon: Icon, isActive }) => {
   const textClasses = isActive
     ? "text-gray-900 font-semibold"
     : "text-gray-700 font-medium";
   const iconBgClass = isActive ? "bg-[#556E53]" : "bg-gray-200";
   const iconColorClass = isActive ? "text-white" : "text-gray-600";
-
   return (
     <button
       key={label}
@@ -21,5 +18,4 @@ const NavItem = ({ label, icon: Icon, isActive }) => {
     </button>
   );
 };
-
 export default NavItem;

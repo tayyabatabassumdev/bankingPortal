@@ -9,7 +9,7 @@ const useTransactionForm = () => {
   const currentUser = useBankStore((s) => s.currentUser);
   const creditMoney = useBankStore((s) => s.creditMoney);
   const cashOutMoney = useBankStore((s) => s.cashOutMoney);
-  const showSuccess = (msg) => toast.success(msg, { duration: 3000 });
+  const showSuccess = (msg) => toast.success(msg, { duration: 4000 });
   const showError = (msg) => toast.error(msg, { duration: 4000 });
   const balance = currentUser?.balance
     ? Number(currentUser.balance).toFixed(2)

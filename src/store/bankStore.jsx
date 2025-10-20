@@ -1,11 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
-const staticDashboardData = {
-  loans: [
-    { icon: "/src/assets/house.jpeg", title: "Family house loan", amount: "-$120,000" },
-    { icon: "/src/assets/bank.jpeg", title: "Eurotrip loan", amount: "-$21,489" },
-    { icon: "/src/assets/car.png", title: "Car loan", amount: "-$2,312" },
+const defaultDashboardData  = {
+  Info: [
+    { icon: "/src/assets/house.jpeg", title: "Total Income", amount: "$1000" },
+    { icon: "/src/assets/bank.jpeg", title: "Expenses", amount: "$0" },
+    { icon: "/src/assets/car.png", title: "Remaining Balance", amount: "$1000" },
   ],
   docs: [
     { name: "ID Card", status: "Verified", time: "19 Mar, at 2:51 PM" },
@@ -13,15 +12,13 @@ const staticDashboardData = {
     { name: "Bank information", status: "Waiting", time: "07 Mar, at 6:44 PM" },
   ],
 };
-
 export const useBankStore = create(
   persist(
     (set, get) => ({
       isAuthenticated: false,
       currentUser: null,
-      users: [], // Each user will now store stats inside
-      ...staticDashboardData,
-
+      users: [],
+    
       signUp: (newUser) => {
         const users = Array.isArray(get().users) ? get().users : [];
         const emailExists = users.some((u) => u.email === newUser.email);
@@ -29,20 +26,18 @@ export const useBankStore = create(
           alert("Email already exists!");
           return false;
         }
-
         const updatedUsers = [
           ...users,
           {
             ...newUser,
             balance: newUser.balance ?? 1000,
             stats: { income: 1000, expense: 0 },
+             dashboard: JSON.parse(JSON.stringify(defaultDashboardData)),
           },
         ];
-
         set({ users: updatedUsers });
         return true;
       },
-
       signIn: (email, password) => {
         const users = Array.isArray(get().users) ? get().users : [];
         const existingUser = users.find((u) => u.email === email && u.password === password);
@@ -52,22 +47,28 @@ export const useBankStore = create(
         }
         return false;
       },
-
       signOut: () => {
         set({ isAuthenticated: false, currentUser: null });
       },
-
-      creditMoney: (amount) => {
+       creditMoney: (amount) => {
         const { currentUser, users } = get();
         if (!currentUser) return;
 
         const newBalance = currentUser.balance + amount;
         const newIncome = currentUser.stats.income + amount;
 
+        const updatedDashboard = { ...currentUser.dashboard };
+        updatedDashboard.Info = updatedDashboard.Info.map((item) => {
+          if (item.title === "Total Income") return { ...item, amount: `$${newIncome}` };
+          if (item.title === "Remaining Balance") return { ...item, amount: `$${newBalance}` };
+          return item;
+        });
+
         const updatedUser = {
           ...currentUser,
           balance: newBalance,
           stats: { ...currentUser.stats, income: newIncome },
+          dashboard: updatedDashboard,
         };
 
         const updatedUsers = users.map((u) =>
@@ -76,7 +77,6 @@ export const useBankStore = create(
 
         set({ currentUser: updatedUser, users: updatedUsers });
       },
-
       cashOutMoney: (amount) => {
         const { currentUser, users } = get();
         if (!currentUser) return;
@@ -89,10 +89,18 @@ export const useBankStore = create(
         const newBalance = currentUser.balance - amount;
         const newExpense = currentUser.stats.expense + amount;
 
+        const updatedDashboard = { ...currentUser.dashboard };
+        updatedDashboard.Info = updatedDashboard.Info.map((item) => {
+          if (item.title === "Expenses") return { ...item, amount: `$${newExpense}` };
+          if (item.title === "Remaining Balance") return { ...item, amount: `$${newBalance}` };
+          return item;
+        });
+
         const updatedUser = {
           ...currentUser,
           balance: newBalance,
           stats: { ...currentUser.stats, expense: newExpense },
+          dashboard: updatedDashboard,
         };
 
         const updatedUsers = users.map((u) =>

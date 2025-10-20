@@ -13,7 +13,7 @@ const LoanCard = ({ icon, title, amount }) => {
       </div>
       <div className="mt-auto mb-4">
         <p className={`text-3xl font-bold mb-1`}>{amount}</p>
-        <p className="text-xs text-gray-500">Balance owing</p>
+       
       </div>
     </div>
   );

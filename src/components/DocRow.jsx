@@ -34,7 +34,7 @@ const ChevronRight = () => (
 const DocRow = ({ name, status, time }) => {
   const { text, bg } = getStatusClasses(status);
   return (
-    <div className="grid grid-cols-[3fr_2fr_2fr_0.1fr] items-center py-4 border-b border-gray-100 last:border-none text-sm hover:bg-gray-50 transition duration-150 cursor-pointer">
+    <div className="grid grid-cols-[3fr_2fr_2fr_0.5fr] items-center py-4 border-b border-gray-100 last:border-none text-sm hover:bg-gray-50 transition duration-150 cursor-pointer">
       <div className="flex items-center space-x-4 text-gray-700 font-medium">
         <File size={16} className="text-gray-500" />
         <span>{name}</span>
