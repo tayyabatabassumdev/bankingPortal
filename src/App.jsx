@@ -1,69 +1,39 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useBankStore } from './store/bankStore';
-
-// Main Views
-import LandingPage from './views/LandingPage';
-import AuthPage from './views/AuthPage';
-import Dashboard from './pages/Dashboard';
-import TransactionPage from './views/TransactionPage'; // New view for Credit/Cash Out
-
-// Layout components
-import Sidebar from './components/Sidebar'; 
-
-// --- Protected Route Wrapper ---
-const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = useBankStore(state => state.isAuthenticated);
-  // Redirect to the sign-in page if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
-  }
-  return children;
-};
-
-// --- Main Application Structure ---
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import LandingPage from "./views/LandingPage";
+import AuthPage from "./views/AuthPage";
+import Dashboard from "./pages/Dashboard";
+import TransactionPage from "./views/TransactionPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedLayout from "./components/ProtectedLayout";
 const App = () => {
-  const isAuthenticated = useBankStore(state => state.isAuthenticated);
-
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        {/* Landing Page Route */}
         <Route path="/" element={<LandingPage />} />
-        
-        {/* Authentication Route */}
         <Route path="/auth" element={<AuthPage />} />
-
-        {/* --- Protected Routes (Requires Sign In) --- */}
-        <Route 
-          path="*" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
-              {/* Main App Layout: Grid for Sidebar and Content */}
-              <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] min-h-screen bg-gray-50">
-                
-                {/* Sidebar (Sticky and full height) */}
-                <Sidebar /> 
-                
-                {/* Main Content Area */}
-                <main>
-                  <Routes>
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/transactions" element={<TransactionPage />} />
-                    
-                    {/* Default redirect after sign-in */}
-                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                  </Routes>
-                </main>
-
-              </div>
+              <ProtectedLayout>
+                <Dashboard />
+              </ProtectedLayout>
             </ProtectedRoute>
-          } 
+          }
         />
-        
+        <Route
+          path="/transactions"
+          element={
+            <ProtectedRoute>
+              <ProtectedLayout>
+                <TransactionPage />
+              </ProtectedLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 };
-
 export default App;

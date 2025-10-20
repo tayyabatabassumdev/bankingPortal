@@ -1,123 +1,114 @@
-import { create } from 'zustand';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-// Function to safely get data from local storage
-const loadState = (key, defaultValue) => {
-    try {
-        const serializedState = localStorage.getItem(key);
-        if (serializedState === null) {
-            return defaultValue;
+const staticDashboardData = {
+  loans: [
+    { icon: "/src/assets/house.jpeg", title: "Family house loan", amount: "-$120,000" },
+    { icon: "/src/assets/bank.jpeg", title: "Eurotrip loan", amount: "-$21,489" },
+    { icon: "/src/assets/car.png", title: "Car loan", amount: "-$2,312" },
+  ],
+  docs: [
+    { name: "ID Card", status: "Verified", time: "19 Mar, at 2:51 PM" },
+    { name: "Photo with ID Card", status: "Declined", time: "09 Mar, at 1:22 AM" },
+    { name: "Bank information", status: "Waiting", time: "07 Mar, at 6:44 PM" },
+  ],
+};
+
+export const useBankStore = create(
+  persist(
+    (set, get) => ({
+      isAuthenticated: false,
+      currentUser: null,
+      users: [], // Each user will now store stats inside
+      ...staticDashboardData,
+
+      signUp: (newUser) => {
+        const users = Array.isArray(get().users) ? get().users : [];
+        const emailExists = users.some((u) => u.email === newUser.email);
+        if (emailExists) {
+          alert("Email already exists!");
+          return false;
         }
-        return JSON.parse(serializedState);
-    } catch (e) {
-        console.warn("Could not load state from local storage", e);
-        return defaultValue;
-    }
-};
 
-// Function to safely save data to local storage
-const saveState = (key, state) => {
-    try {
-        const serializedState = JSON.stringify(state);
-        localStorage.setItem(key, serializedState);
-    } catch (e) {
-        console.warn("Could not save state to local storage", e);
-    }
-};
+        const updatedUsers = [
+          ...users,
+          {
+            ...newUser,
+            balance: newUser.balance ?? 1000,
+            stats: { income: 1000, expense: 0 },
+          },
+        ];
 
-// Default complex data structures for the dashboard (if no user is logged in)
-const defaultDashboardData = {
-    // Mock user data for the sidebar/card
-    user: { 
-        name: "Robert Del Naja", 
-        phone: "+ 1-541-754-3010", 
-        balance: 2302.00 
-    },
-    // Mock stats data for the Statistics component
-    stats: {
-        income: 3430,
-        expense: 2430
-    },
-    // Mock loan data for the LoanCard components
-    loans: [
-        { icon: '/src/assets/house.jpeg', title: "Family house loan", amount: "-$120,000" },
-        { icon: '/src/assets/bank.jpeg', title: "Eurotrip loan", amount: "-$21,489" },
-        { icon: '/src/assets/car.png', title: "Car loan", amount: "-$2,312" },
-    ],
-    // Mock document data for the DocRow components
-    docs: [
-        { name: "ID Card", status: "Verified", time: "19 Mar, at 2:51 PM" },
-        { name: "Photo with ID Card", status: "Declined", time: "09 Mar, at 1:22 AM" },
-        { name: "Bank information", status: "Waiting", time: "07 Mar, at 6:44 PM" },
-        { name: "IBANK", status: "Declined", time: "08 Mar, at 4:50 PM" },
-        { name: "Registration", status: "Verified", time: "07 Mar, at 10:01 AM" },
-    ],
-};
+        set({ users: updatedUsers });
+        return true;
+      },
 
-
-// Main Store
-export const useBankStore = create((set, get) => ({
-    // Load initial authentication state
-    isAuthenticated: loadState('isAuthenticated', false),
-    currentUser: loadState('currentUser', null),
-
-    // Dashboard data (can be static or dynamic)
-    ...defaultDashboardData,
-
-    // --- Authentication Actions ---
-    signIn: (email, password) => {
-        // Simple mock sign-in logic (in a real app, you'd check a user list)
-        if (email === "test@example.com" && password === "password") {
-            const user = { 
-                id: 1, 
-                email, 
-                name: "Test User", 
-                phone: "+1-555-555-5555",
-                balance: 5000.00 // Default starting balance
-            };
-            set({ isAuthenticated: true, currentUser: user });
-            saveState('isAuthenticated', true);
-            saveState('currentUser', user);
-            return true;
+      signIn: (email, password) => {
+        const users = Array.isArray(get().users) ? get().users : [];
+        const existingUser = users.find((u) => u.email === email && u.password === password);
+        if (existingUser) {
+          set({ isAuthenticated: true, currentUser: existingUser });
+          return true;
         }
         return false;
-    },
+      },
 
-    signOut: () => {
+      signOut: () => {
         set({ isAuthenticated: false, currentUser: null });
-        localStorage.removeItem('isAuthenticated');
-        localStorage.removeItem('currentUser');
-    },
+      },
 
-    // --- Account Management Actions ---
-    creditMoney: (amount) => {
-        set(state => {
-            const newBalance = state.currentUser.balance + amount;
-            const updatedUser = { ...state.currentUser, balance: newBalance };
-            
-            // Save updated user data
-            saveState('currentUser', updatedUser);
-            
-            return { currentUser: updatedUser };
-        });
-    },
+      creditMoney: (amount) => {
+        const { currentUser, users } = get();
+        if (!currentUser) return;
 
-    cashOutMoney: (amount) => {
-        set(state => {
-            if (state.currentUser.balance < amount) {
-                alert("Insufficient funds!");
-                return state;
-            }
-            const newBalance = state.currentUser.balance - amount;
-            const updatedUser = { ...state.currentUser, balance: newBalance };
-            
-            // Save updated user data
-            saveState('currentUser', updatedUser);
+        const newBalance = currentUser.balance + amount;
+        const newIncome = currentUser.stats.income + amount;
 
-            return { currentUser: updatedUser };
-        });
-    },
-}));
+        const updatedUser = {
+          ...currentUser,
+          balance: newBalance,
+          stats: { ...currentUser.stats, income: newIncome },
+        };
 
-// Expose simplified data structure for components needing static data only
-// This is used by your existing components like Sidebar, Statistics, etc., to avoid refactoring them heavily.
-export const useBankDashboardStore = create(() => (defaultDashboardData));
+        const updatedUsers = users.map((u) =>
+          u.email === currentUser.email ? updatedUser : u
+        );
+
+        set({ currentUser: updatedUser, users: updatedUsers });
+      },
+
+      cashOutMoney: (amount) => {
+        const { currentUser, users } = get();
+        if (!currentUser) return;
+
+        if (currentUser.balance < amount) {
+          alert("Insufficient funds!");
+          return;
+        }
+
+        const newBalance = currentUser.balance - amount;
+        const newExpense = currentUser.stats.expense + amount;
+
+        const updatedUser = {
+          ...currentUser,
+          balance: newBalance,
+          stats: { ...currentUser.stats, expense: newExpense },
+        };
+
+        const updatedUsers = users.map((u) =>
+          u.email === currentUser.email ? updatedUser : u
+        );
+
+        set({ currentUser: updatedUser, users: updatedUsers });
+      },
+    }),
+    {
+      name: "bank-storage",
+      partialize: (state) => ({
+        isAuthenticated: state.isAuthenticated,
+        currentUser: state.currentUser,
+        users: state.users,
+      }),
+    }
+  )
+);
